@@ -12,7 +12,7 @@ export function DonutRisk({ value }: { value: number }) {
     { name: "Rest", value: Math.max(0, 100 - value) },
   ];
 
-  const colors = ["#38BDF8", "#E2E8F0"]; // sky + slate-200
+  const colors = ["#6366f1", "#E2E8F0"]; // indigo + slate-200
 
   return (
     <div className="h-44 w-full">
@@ -50,7 +50,7 @@ export function RadarBlocks({
         <RadarChart data={points}>
           <PolarGrid />
           <PolarAngleAxis dataKey="label" tick={{ fontSize: 12 }} />
-          <Radar dataKey="value" stroke="#60A5FA" fill="#93C5FD" fillOpacity={0.45} />
+          <Radar dataKey="value" stroke="#6366f1" fill="#818cf8" fillOpacity={0.4} />
         </RadarChart>
       </ResponsiveContainer>
     </div>
