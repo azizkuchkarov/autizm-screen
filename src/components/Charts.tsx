@@ -31,8 +31,8 @@ export function DonutRisk({ value }: { value: number }) {
         </PieChart>
       </ResponsiveContainer>
       <div className="-mt-28 text-center">
-        <div className="text-3xl font-extrabold text-slate-900">{value}%</div>
-        <div className="text-xs font-semibold text-slate-600">Umumiy risk</div>
+        <div className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{value}%</div>
+        <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">Umumiy risk</div>
       </div>
     </div>
   );
@@ -48,9 +48,19 @@ export function RadarBlocks({
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={points}>
-          <PolarGrid />
-          <PolarAngleAxis dataKey="label" tick={{ fontSize: 12 }} />
-          <Radar dataKey="value" stroke="#6366f1" fill="#818cf8" fillOpacity={0.4} />
+          <PolarGrid stroke="#cbd5e1" className="dark:stroke-slate-600" />
+          <PolarAngleAxis 
+            dataKey="label" 
+            tick={{ fontSize: 12, fill: 'currentColor' }} 
+            className="text-slate-700 dark:text-slate-300"
+          />
+          <Radar 
+            dataKey="value" 
+            stroke="#6366f1" 
+            fill="#818cf8" 
+            fillOpacity={0.4}
+            className="dark:stroke-indigo-400 dark:fill-indigo-500"
+          />
         </RadarChart>
       </ResponsiveContainer>
     </div>
