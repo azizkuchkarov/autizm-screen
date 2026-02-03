@@ -7,6 +7,7 @@ import type { AnswersMap } from "@/lib/scoring";
 type Props = {
   childAgeYears: number;
   onComplete: (answers: AnswersMap) => void;
+  allowResume?: boolean;
 };
 
 const OPTIONS: { label: string; value: 0 | 1 | 2 }[] = [
@@ -15,34 +16,63 @@ const OPTIONS: { label: string; value: 0 | 1 | 2 }[] = [
   { label: "Ko‘pincha", value: 2 },
 ];
 
-export default function TestWizard({ childAgeYears, onComplete }: Props) {
+const LS_KEY = "asds_progress_v1";
+
+export default function TestWizard({ childAgeYears, onComplete, allowResume = true }: Props) {
   const [idx, setIdx] = React.useState(0);
   const [answers, setAnswers] = React.useState<AnswersMap>({});
 
+  // Resume load
+  React.useEffect(() => {
+    if (!allowResume) return;
+    const saved = localStorage.getItem(LS_KEY);
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (typeof parsed?.idx === "number") setIdx(parsed.idx);
+      if (parsed?.answers && typeof parsed.answers === "object") setAnswers(parsed.answers);
+    } catch {}
+  }, [allowResume]);
+
+  // Save progress
+  React.useEffect(() => {
+    if (!allowResume) return;
+    localStorage.setItem(LS_KEY, JSON.stringify({ idx, answers }));
+  }, [idx, answers, allowResume]);
+
   const q = QUESTIONS[idx];
   const progress = Math.round(((idx + 1) / QUESTIONS.length) * 100);
+  const blockMeta = BLOCKS.find((b) => b.id === q.block);
 
   function setAnswer(v: 0 | 1 | 2) {
     setAnswers((prev) => ({ ...prev, [q.id]: v }));
   }
 
   function next() {
-    if (idx < QUESTIONS.length - 1) setIdx((x) => x + 1);
-    else onComplete(answers);
+    const current = answers[q.id] ?? 0;
+    const merged = { ...answers, [q.id]: current };
+
+    if (idx < QUESTIONS.length - 1) {
+      setAnswers(merged);
+      setIdx((x) => x + 1);
+    } else {
+      localStorage.removeItem(LS_KEY);
+      onComplete(merged);
+    }
   }
 
   function prev() {
     if (idx > 0) setIdx((x) => x - 1);
   }
 
-  const blockMeta = BLOCKS.find((b) => b.id === q.block);
-
   return (
     <div className="mx-auto max-w-md px-4 pb-20 pt-6">
       <div className="rounded-3xl bg-white/80 shadow-sm ring-1 ring-black/5">
         <div className="p-5">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-600">Bolaning yoshi: <span className="font-semibold">{childAgeYears}</span></div>
+            <div className="text-sm text-slate-600">
+              Yosh: <span className="font-semibold">{childAgeYears}</span>
+            </div>
             <div className="text-sm font-semibold text-sky-700">{progress}%</div>
           </div>
 
@@ -54,12 +84,9 @@ export default function TestWizard({ childAgeYears, onComplete }: Props) {
             <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
               {blockMeta?.title}
             </div>
-            <h1 className="mt-3 text-lg font-semibold leading-snug text-slate-900">
-              {q.text}
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              Javobni tanlang (Yo‘q / Ba’zan / Ko‘pincha).
-            </p>
+
+            <h1 className="mt-3 text-lg font-semibold leading-snug text-slate-900">{q.text}</h1>
+            <p className="mt-2 text-sm text-slate-600">Javobni tanlang.</p>
 
             <div className="mt-4 grid gap-3">
               {OPTIONS.map((o) => {
@@ -70,11 +97,8 @@ export default function TestWizard({ childAgeYears, onComplete }: Props) {
                     type="button"
                     onClick={() => setAnswer(o.value)}
                     className={[
-                      "w-full rounded-2xl px-4 py-3 text-left text-sm font-semibold transition",
-                      "ring-1 ring-black/5",
-                      active
-                        ? "bg-sky-500 text-white shadow-sm"
-                        : "bg-white hover:bg-slate-50 text-slate-900",
+                      "w-full rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ring-1 ring-black/5",
+                      active ? "bg-sky-500 text-white shadow-sm" : "bg-white hover:bg-slate-50 text-slate-900",
                     ].join(" ")}
                   >
                     {o.label}
@@ -93,18 +117,19 @@ export default function TestWizard({ childAgeYears, onComplete }: Props) {
             >
               Orqaga
             </button>
+
             <button
               type="button"
               onClick={next}
-              className="w-2/3 rounded-2xl bg-coral-500 px-4 py-3 text-sm font-semibold text-white shadow-sm"
-              style={{ backgroundColor: "#FF6B6B" }} // coral
+              className="w-2/3 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-sm"
+              style={{ backgroundColor: "#FF6B6B" }}
             >
               {idx < QUESTIONS.length - 1 ? "Keyingi" : "Natijani ko‘rish"}
             </button>
           </div>
 
           <p className="mt-4 text-xs text-slate-500">
-            Eslatma: Bu test skrining maqsadida. Tashxis faqat mutaxassis tomonidan qo‘yiladi.
+            Eslatma: Bu skrining. Tashxis faqat mutaxassis tomonidan qo‘yiladi.
           </p>
         </div>
       </div>
